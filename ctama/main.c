@@ -26,6 +26,7 @@ typedef enum {
 } GameState;
 
 Canvas *egg_canvas=NULL;
+Canvas *chick_canvas=NULL;
 
 // Math Helpers
 static inline float clamp(float val, float min, float max) {
@@ -50,6 +51,7 @@ static float get_delta_time(Uint32* last_time) {
 void setup(GameState* state) {
     (*state)=GAME_SETUP;
     egg_canvas=Canvas_Load("egg.cvs");
+    chick_canvas=Canvas_Load("chick.cvs");
 }
 
 // Update Function
@@ -57,7 +59,7 @@ void update(MySDL* app, GameState* state, float delta_time) {
     static int frame=0;
 
     mysdl_clear(app,SWEETIE_16_PALETTE[0x00]);
-    Canvas_Draw(app,egg_canvas,(frame/100)%2,0,0,1);
+    Canvas_Draw(app,egg_canvas,(frame/100)%egg_canvas->frames,0,0,1);
 
     frame++;
 }
