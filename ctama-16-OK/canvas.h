@@ -13,7 +13,6 @@ typedef struct {
 Canvas *Canvas_Load(char *path);
 void Canvas_Free(Canvas **canvas);
 void Canvas_Draw(MySDL *app,Canvas *canvas,int frame,int x,int y,int size);
-void Canvas_Animate(MySDL *app, Canvas *canvas, Uint64 *anim_timer, int *current_index, const int *frame_list, const Uint64 *delay_list, int num_frames, int x, int y, int size);
 
 #ifdef CANVAS_IMPLEMENTATION
 
@@ -62,24 +61,6 @@ void Canvas_Draw(MySDL *app,Canvas *canvas,int frame,int x,int y,int size) {
             }
         }
     }
-}
-
-void Canvas_Animate(MySDL *app, Canvas *canvas, Uint64 *anim_timer, int *current_index, const int *frame_list, const Uint64 *delay_list, int num_frames, int x, int y, int size) {
-    Uint64 current_ticks = SDL_GetTicks64();
-    if (*anim_timer == 0) {
-        *anim_timer = current_ticks;
-    }
-
-    Uint64 elapsed_ms = current_ticks - *anim_timer;
-    Uint64 delay_ms = delay_list[*current_index] / 1000;
-
-    if (elapsed_ms >= delay_ms) {
-        *anim_timer = current_ticks;
-        *current_index = (*current_index + 1) % num_frames;
-    }
-
-    int active_frame = frame_list[*current_index];
-    Canvas_Draw(app, canvas, active_frame, x, y, size);
 }
 
 #endif /* CANVAS_IMPLEMENTATION */
