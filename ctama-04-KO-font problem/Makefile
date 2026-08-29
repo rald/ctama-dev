@@ -1,7 +1,7 @@
 # Makefile for mysdl2 showcase
 
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c99 -g
+CFLAGS = -Wall -Wextra -std=c99
 LDFLAGS = -lSDL2 -lm
 
 TARGET = game

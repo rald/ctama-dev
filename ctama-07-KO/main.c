@@ -53,12 +53,8 @@ void setup(GameState* state) {
 
 // Update Function
 void update(MySDL* app, GameState* state, float delta_time) {
-    static int frame=0;
-
     mysdl_clear(app,SWEETIE_16_PALETTE[0x00]);
-    Canvas_Draw(app,egg_canvas,(frame/100)%2,0,0,1);
-
-    frame++;
+    Canvas_Draw(app,egg_canvas,0,0,0,1);
 }
 
 int main(void) {

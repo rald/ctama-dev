@@ -1,10 +1,8 @@
-# Makefile for mysdl2 showcase
-
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c99 -g
+CFLAGS = -Wall -Wextra -std=c99
 LDFLAGS = -lSDL2 -lm
 
-TARGET = game
+TARGET = tamagotchi
 SRC = main.c
 
 ifeq ($(OS),Windows_NT)
@@ -14,7 +12,7 @@ endif
 
 all: $(TARGET)
 
-$(TARGET): $(SRC) mysdl2.h
+$(TARGET): $(SRC) mysdl2.h sweetie-16.h font.h sprite.h
 	$(CC) $(SRC) -o $(TARGET) $(CFLAGS) $(LDFLAGS)
 
 run: all

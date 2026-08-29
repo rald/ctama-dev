@@ -5,12 +5,10 @@
 #define MYSDL2_IMPLEMENTATION
 #define SWEETIE_16_IMPLEMENTATION
 #define FONT_IMPLEMENTATION
-#define CANVAS_IMPLEMENTATION
 
 #include "mysdl2.h"
 #include "sweetie-16.h"
 #include "font.h"
-#include "canvas.h"
 
 #include <stdio.h>
 
@@ -23,8 +21,6 @@ typedef enum {
     GAME_START,
     GAME_END,
 } GameState;
-
-Canvas *egg_canvas=NULL;
 
 // Math Helpers
 static inline float clamp(float val, float min, float max) {
@@ -47,25 +43,21 @@ static float get_delta_time(Uint32* last_time) {
 
 // Setup Function
 void setup(GameState* state) {
-    (*state)=GAME_SETUP;
-    egg_canvas=Canvas_Load("egg.cvs");
 }
 
 // Update Function
 void update(MySDL* app, GameState* state, float delta_time) {
-    static int frame=0;
-
     mysdl_clear(app,SWEETIE_16_PALETTE[0x00]);
-    Canvas_Draw(app,egg_canvas,(frame/100)%2,0,0,1);
-
-    frame++;
+    for(int i=0;i<256;i++) {
+        mysdl_draw_char(app,i%16*8,i/16*8,i,SWEETIE_16_PALETTE[0x0C]);
+    }
 }
 
 int main(void) {
 
     MySDL app;
 
-    if (!mysdl_init(&app, "Game", SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_SCALE)) {
+    if (!mysdl_init(&app, "MySDL2 GameController Configuration Showcase", SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_SCALE)) {
         printf("Failed to initialize MySDL2!\n");
         return 1;
     }
