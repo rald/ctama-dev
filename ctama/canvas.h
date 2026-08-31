@@ -18,31 +18,145 @@ void Canvas_Animate(MySDL *app, Canvas *canvas, Uint64 *anim_timer, int *current
 #ifdef CANVAS_IMPLEMENTATION
 
 Canvas *Canvas_Load(char *path) {
-    Canvas *canvas=malloc(sizeof(*canvas));
-    char *hex="0123456789ABCDEF.";
-    FILE *fin=fopen(path,"r");
-    int ch;
-    int i,j,k;
+    FILE *fin = fopen(path, "r");
+    if (!fin) return NULL;
 
-    fscanf(fin,"%d,%d,%d",&canvas->frames,&canvas->w,&canvas->h);
-    canvas->pixels=calloc(canvas->frames*canvas->w*canvas->h,sizeof(*canvas->pixels));
+    Canvas *canvas = malloc(sizeof(*canvas));
+    if (!canvas) {
+        fclose(fin);
+        return NULL;
+    }
 
-    i=0;
-    while((ch=fgetc(fin))!=EOF) {
-        j=-1;
-        for(k=0;hex[k];k++) {
-            if(ch==hex[k]) {
-                j=(k==16?255:k);
-                break;
+    if (fscanf(fin, "%d,%d,%d", &canvas->frames, &canvas->w, &canvas->h) != 3) {
+        fclose(fin);
+        free(canvas);
+        return NULL;
+    }
+
+    size_t total_pixels = (size_t)canvas->frames * canvas->w * canvas->h;
+    canvas->pixels = malloc(total_pixels);
+    if (!canvas->pixels) {
+        fclose(fin);
+        free(canvas);
+        return NULL;
+    }
+
+    // Pre-calculate an O(1) ASCII lookup table
+    uint8_t ascii_map[256];
+    for (int i = 0; i < 256; i++) ascii_map[i] = 255;
+    for (int i = 0; i < 16; i++) {
+        ascii_map[(int)"0123456789ABCDEF"[i]] = i;
+        ascii_map[(int)"0123456789abcdef"[i]] = i;
+    }
+    ascii_map[(int)'.'] = 254; 
+    ascii_map[(int)'\n'] = 253; 
+    ascii_map[(int)'\r'] = 253; 
+    ascii_map[(int)' '] = 252;  
+    ascii_map[(int)'\t'] = 252; 
+
+    // Buffer-based block reading to maximize I/O throughput
+    char buffer[8192];
+    size_t bytes_read;
+    size_t i = 0;
+    int line = 1, col = 1;
+    int in_line_comment = 0;
+    int in_block_comment = 0;
+
+    while ((bytes_read = fread(buffer, 1, sizeof(buffer), fin)) > 0) {
+        char *p = buffer;
+        char *end = buffer + bytes_read;
+
+        while (p < end) {
+            int ch = (unsigned char)*p++;
+
+            if (ch == '\n') {
+                line++;
+                col = 1;
+                in_line_comment = 0;
+                continue;
             }
-        }
-        if(j!=-1) {
-            canvas->pixels[i++]=j;
+
+            if (in_line_comment) {
+                col++;
+                continue;
+            }
+
+            // Handle comments using inline lookahead within the buffer
+            if (ch == '/') {
+                if (p < end) {
+                    int next_ch = (unsigned char)*p;
+                    if (next_ch == '/') {
+                        in_line_comment = 1;
+                        p++;
+                        col += 2;
+                        continue;
+                    } else if (next_ch == '*') {
+                        in_block_comment = 1;
+                        p++;
+                        col += 2;
+                        continue;
+                    }
+                } else {
+                    // Handle edge case where '/' sits right at the buffer boundary
+                    int next_ch = fgetc(fin);
+                    if (next_ch == '/') {
+                        in_line_comment = 1;
+                        col += 2;
+                        continue;
+                    } else if (next_ch == '*') {
+                        in_block_comment = 1;
+                        col += 2;
+                        continue;
+                    } else if (next_ch != EOF) {
+                        ungetc(next_ch, fin);
+                    }
+                }
+            }
+
+            if (in_block_comment) {
+                if (ch == '*') {
+                    int next_ch = (p < end) ? (unsigned char)*p : fgetc(fin);
+                    if (next_ch == '/') {
+                        in_block_comment = 0;
+                        if (p < end) p++;
+                        col += 2;
+                        continue;
+                    } else if (p >= end && next_ch != EOF) {
+                        ungetc(next_ch, fin);
+                    }
+                }
+                col++;
+                continue;
+            }
+
+            uint8_t val = ascii_map[ch];
+            if (val == 255) {
+                fprintf(stderr, "Error: Invalid character '%c' (0x%02X) at LINE:%d COLUMN:%d in %s\n", 
+                        (ch >= 32 && ch <= 126) ? ch : '?', ch, line, col, path);
+                fclose(fin);
+                free(canvas->pixels);
+                free(canvas);
+                return NULL;
+            }
+
+            if (val != 252 && val != 253) { 
+                if (i < total_pixels) {
+                    canvas->pixels[i++] = (val == 254) ? 255 : val;
+                }
+            }
+            col++;
         }
     }
 
-    fclose(fin);
+    if (in_block_comment) {
+        fprintf(stderr, "Error: Unclosed block comment at end of file in %s\n", path);
+        fclose(fin);
+        free(canvas->pixels);
+        free(canvas);
+        return NULL;
+    }
 
+    fclose(fin);
     return canvas;
 }
 

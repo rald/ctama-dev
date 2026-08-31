@@ -14,7 +14,6 @@
 
 #include <stdio.h>
 
-#define GAME_CONTROLLER_DB_PATH "gamecontrollerdb.txt"
 #define GAME_TITLE "TAMAGOTCHI"
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 128
@@ -67,7 +66,7 @@ int main(void) {
 
     MySDL app;
 
-    if (!mysdl_init(&app, GAME_CONTROLLER_DB_PATH, GAME_TITLE, SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_SCALE)) {
+    if (!mysdl_init(&app, GAME_TITLE, SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_SCALE)) {
         printf("Failed to initialize MySDL2!\n");
         return 1;
     }

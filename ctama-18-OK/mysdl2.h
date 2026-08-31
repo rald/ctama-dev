@@ -37,7 +37,7 @@ typedef struct {
     Uint8 joy_hats[4];
 } MySDL;
 
-bool mysdl_init(MySDL* app, char *gamecontrollerdb_path, const char* title, int width, int height, int pixelSize);
+bool mysdl_init(MySDL* app, const char* title, int width, int height, int pixelSize);
 void mysdl_quit(MySDL* app);
 bool mysdl_poll(MySDL* app);
 void mysdl_clear(MySDL* app, Uint32 color);
@@ -84,13 +84,13 @@ double mysdl_joystick_angle(MySDL* app, int axis_x, int axis_y, int dead_zone);
 #define MYSDL_COLOR_G(c) ((Uint8)((c >> 8)  & 0xFF))
 #define MYSDL_COLOR_B(c) ((Uint8)((c)       & 0xFF))
 
-bool mysdl_init(MySDL* app, char *gamecontrollerdb_path, const char* title, int width, int height, int pixelSize) {
+bool mysdl_init(MySDL* app, const char* title, int width, int height, int pixelSize) {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) < 0) {
         printf("SDL_Init Error: %s\n", SDL_GetError());
         return false;
     }
     
-    int mappings_added = SDL_GameControllerAddMappingsFromFile(gamecontrollerdb_path);
+    int mappings_added = SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
     if (mappings_added > 0) {
         printf("Loaded %d controller mapping(s) from gamecontrollerdb.txt\n", mappings_added);
     } else {
